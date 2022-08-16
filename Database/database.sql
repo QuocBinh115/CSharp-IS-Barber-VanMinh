@@ -23,6 +23,10 @@ IF EXISTS (SELECT 1 FROM dbo.sysobjects WHERE id = object_id(N'[FK_BangLuong_Nha
 ALTER TABLE [BangLuong] DROP CONSTRAINT [FK_BangLuong_NhanVien]
 GO
 
+IF EXISTS (SELECT 1 FROM dbo.sysobjects WHERE id = object_id(N'[FK_CT_BanHang_GiamGia]') AND OBJECTPROPERTY(id, N'IsForeignKey') = 1) 
+ALTER TABLE [CT_BanHang] DROP CONSTRAINT [FK_CT_BanHang_GiamGia]
+GO
+
 IF EXISTS (SELECT 1 FROM dbo.sysobjects WHERE id = object_id(N'[FK_CT_BanHang_HoaDonBanHang]') AND OBJECTPROPERTY(id, N'IsForeignKey') = 1) 
 ALTER TABLE [CT_BanHang] DROP CONSTRAINT [FK_CT_BanHang_HoaDonBanHang]
 GO
@@ -35,16 +39,20 @@ IF EXISTS (SELECT 1 FROM dbo.sysobjects WHERE id = object_id(N'[FK_CT_DichVu_Dic
 ALTER TABLE [CT_DichVu] DROP CONSTRAINT [FK_CT_DichVu_DichVu]
 GO
 
+IF EXISTS (SELECT 1 FROM dbo.sysobjects WHERE id = object_id(N'[FK_CT_DichVu_GiamGia]') AND OBJECTPROPERTY(id, N'IsForeignKey') = 1) 
+ALTER TABLE [CT_DichVu] DROP CONSTRAINT [FK_CT_DichVu_GiamGia]
+GO
+
 IF EXISTS (SELECT 1 FROM dbo.sysobjects WHERE id = object_id(N'[FK_CT_DichVu_HoaDonDichVu]') AND OBJECTPROPERTY(id, N'IsForeignKey') = 1) 
 ALTER TABLE [CT_DichVu] DROP CONSTRAINT [FK_CT_DichVu_HoaDonDichVu]
 GO
 
-IF EXISTS (SELECT 1 FROM dbo.sysobjects WHERE id = object_id(N'[FK_CT_NhapHang_SanPham]') AND OBJECTPROPERTY(id, N'IsForeignKey') = 1) 
-ALTER TABLE [CT_NhapHang] DROP CONSTRAINT [FK_CT_NhapHang_SanPham]
+IF EXISTS (SELECT 1 FROM dbo.sysobjects WHERE id = object_id(N'[FK_CT_NhapHang_HoaDonNhapHang]') AND OBJECTPROPERTY(id, N'IsForeignKey') = 1) 
+ALTER TABLE [CT_NhapHang] DROP CONSTRAINT [FK_CT_NhapHang_HoaDonNhapHang]
 GO
 
-IF EXISTS (SELECT 1 FROM dbo.sysobjects WHERE id = object_id(N'[FK_HoaDonNhapHang_DonNhapHang]') AND OBJECTPROPERTY(id, N'IsForeignKey') = 1) 
-ALTER TABLE [CT_NhapHang] DROP CONSTRAINT [FK_HoaDonNhapHang_DonNhapHang]
+IF EXISTS (SELECT 1 FROM dbo.sysobjects WHERE id = object_id(N'[FK_CT_NhapHang_SanPham]') AND OBJECTPROPERTY(id, N'IsForeignKey') = 1) 
+ALTER TABLE [CT_NhapHang] DROP CONSTRAINT [FK_CT_NhapHang_SanPham]
 GO
 
 IF EXISTS (SELECT 1 FROM dbo.sysobjects WHERE id = object_id(N'[FK_HoaDonBanHang_GiamGia]') AND OBJECTPROPERTY(id, N'IsForeignKey') = 1) 
@@ -177,7 +185,8 @@ CREATE TABLE [BangLuong]
 	[NgayPhatLuong] date NOT NULL,
 	[MaNV] char(10) NOT NULL,
 	[Luong] float NULL DEFAULT 0,
-	[Thuong] float NULL DEFAULT 0
+	[Thuong] float NULL DEFAULT 0,
+	[HieuSuat] float NULL
 )
 GO
 
@@ -199,7 +208,8 @@ CREATE TABLE [CT_BanHang]
 	[MaHDBH] char(10) NOT NULL,
 	[MaSP] char(10) NULL,
 	[SoLuong] int NULL,
-	[ThanhTien] float NULL
+	[ThanhTien] float NULL,
+	[MaGiamGia] char(10) NULL
 )
 GO
 
@@ -209,17 +219,18 @@ CREATE TABLE [CT_DichVu]
 	[MaDV] char(10) NULL,
 	[SoLuong] int NULL,
 	[MaHDDV] char(10) NOT NULL,
-	[ThanhTien] float NULL
+	[ThanhTien] float NULL,
+	[MaGiamGia] char(10) NULL
 )
 GO
 
 CREATE TABLE [CT_NhapHang]
 (
 	[STT] int NOT NULL,
-	[MaHDN] char(10) NOT NULL,
+	[MaHDNH] char(10) NOT NULL,
 	[MaSP] char(10) NULL,
 	[SoLuong] int NULL,
-	[ThanhTien] float NULL
+	[TongTien] float NULL
 )
 GO
 
@@ -266,7 +277,7 @@ GO
 
 CREATE TABLE [HoaDonNhapHang]
 (
-	[MaHDN] char(10) NOT NULL,
+	[MaHDNH] char(10) NOT NULL,
 	[NgayNhap] date NULL,
 	[TongTien] float NULL
 )
@@ -316,7 +327,8 @@ CREATE TABLE [NhanVien]
 	[DiaChi] nvarchar(100) NULL,
 	[TaiKhoan] varchar(50) NULL,
 	[LoaiNV] nvarchar(50) NULL,
-	[ChiNhanh] char(10) NULL
+	[ChiNhanh] char(10) NULL,
+	[MucTieuThang] int NULL
 )
 GO
 
@@ -327,7 +339,7 @@ CREATE TABLE [SanPham]
 	[SoLuongTon] int NULL,
 	[LoaiSP] nvarchar(50) NULL,
 	[NhaCungCap] char(10) NULL,
-	[GiaBan] float
+	[GiaBan] float NULL
 )
 GO
 
@@ -335,8 +347,8 @@ CREATE TABLE [TaiKhoan]
 (
 	[TenTaiKhoan] varchar(50) NOT NULL,
 	[MatKhau] varchar(20) NULL,
-	[NguoiDung] varchar(50) NULL,
-	[VaiTro] varchar(20) NULL,
+	[NguoiDung] nvarchar(50) NULL,
+	[VaiTro] nvarchar(20) NULL,
 	[TrangThai] varchar(10) NULL,
 	[MaKH] char(10) NULL
 )
@@ -372,6 +384,10 @@ ALTER TABLE [CT_BanHang]
 	PRIMARY KEY CLUSTERED ([STT] ASC,[MaHDBH] ASC)
 GO
 
+CREATE NONCLUSTERED INDEX [IXFK_CT_BanHang_GiamGia] 
+ ON [CT_BanHang] ([MaGiamGia] ASC)
+GO
+
 CREATE NONCLUSTERED INDEX [IXFK_CT_BanHang_HoaDonBanHang] 
  ON [CT_BanHang] ([MaHDBH] ASC)
 GO
@@ -389,13 +405,21 @@ CREATE NONCLUSTERED INDEX [IXFK_CT_DichVu_DichVu]
  ON [CT_DichVu] ([MaDV] ASC)
 GO
 
+CREATE NONCLUSTERED INDEX [IXFK_CT_DichVu_GiamGia] 
+ ON [CT_DichVu] ([MaGiamGia] ASC)
+GO
+
 CREATE NONCLUSTERED INDEX [IXFK_CT_DichVu_HoaDonDichVu] 
  ON [CT_DichVu] ([MaHDDV] ASC)
 GO
 
 ALTER TABLE [CT_NhapHang] 
  ADD CONSTRAINT [PK_HoaDonNhapHang]
-	PRIMARY KEY CLUSTERED ([STT] ASC,[MaHDN] ASC)
+	PRIMARY KEY CLUSTERED ([STT] ASC,[MaHDNH] ASC)
+GO
+
+CREATE NONCLUSTERED INDEX [IXFK_CT_NhapHang_HoaDonNhapHang] 
+ ON [CT_NhapHang] ([MaHDNH] ASC)
 GO
 
 CREATE NONCLUSTERED INDEX [IXFK_CT_NhapHang_SanPham] 
@@ -403,7 +427,7 @@ CREATE NONCLUSTERED INDEX [IXFK_CT_NhapHang_SanPham]
 GO
 
 CREATE NONCLUSTERED INDEX [IXFK_HoaDonNhapHang_DonNhapHang] 
- ON [CT_NhapHang] ([MaHDN] ASC)
+ ON [CT_NhapHang] ([MaHDNH] ASC)
 GO
 
 ALTER TABLE [DichVu] 
@@ -452,7 +476,7 @@ GO
 
 ALTER TABLE [HoaDonNhapHang] 
  ADD CONSTRAINT [PK_DonNhapHang]
-	PRIMARY KEY CLUSTERED ([MaHDN] ASC)
+	PRIMARY KEY CLUSTERED ([MaHDNH] ASC)
 GO
 
 ALTER TABLE [KhachHang] 
@@ -515,6 +539,10 @@ ALTER TABLE [BangLuong] ADD CONSTRAINT [FK_BangLuong_NhanVien]
 	FOREIGN KEY ([MaNV]) REFERENCES [NhanVien] ([MaNV]) ON DELETE No Action ON UPDATE No Action
 GO
 
+ALTER TABLE [CT_BanHang] ADD CONSTRAINT [FK_CT_BanHang_GiamGia]
+	FOREIGN KEY ([MaGiamGia]) REFERENCES [GiamGia] ([MaGiamGia]) ON DELETE No Action ON UPDATE No Action
+GO
+
 ALTER TABLE [CT_BanHang] ADD CONSTRAINT [FK_CT_BanHang_HoaDonBanHang]
 	FOREIGN KEY ([MaHDBH]) REFERENCES [HoaDonBanHang] ([MaHDBH]) ON DELETE No Action ON UPDATE No Action
 GO
@@ -527,16 +555,20 @@ ALTER TABLE [CT_DichVu] ADD CONSTRAINT [FK_CT_DichVu_DichVu]
 	FOREIGN KEY ([MaDV]) REFERENCES [DichVu] ([MaDV]) ON DELETE No Action ON UPDATE No Action
 GO
 
+ALTER TABLE [CT_DichVu] ADD CONSTRAINT [FK_CT_DichVu_GiamGia]
+	FOREIGN KEY ([MaGiamGia]) REFERENCES [GiamGia] ([MaGiamGia]) ON DELETE No Action ON UPDATE No Action
+GO
+
 ALTER TABLE [CT_DichVu] ADD CONSTRAINT [FK_CT_DichVu_HoaDonDichVu]
 	FOREIGN KEY ([MaHDDV]) REFERENCES [HoaDonDichVu] ([MaHDDV]) ON DELETE No Action ON UPDATE No Action
 GO
 
-ALTER TABLE [CT_NhapHang] ADD CONSTRAINT [FK_CT_NhapHang_SanPham]
-	FOREIGN KEY ([MaSP]) REFERENCES [SanPham] ([MaSP]) ON DELETE No Action ON UPDATE No Action
+ALTER TABLE [CT_NhapHang] ADD CONSTRAINT [FK_CT_NhapHang_HoaDonNhapHang]
+	FOREIGN KEY ([MaHDNH]) REFERENCES [HoaDonNhapHang] ([MaHDNH]) ON DELETE No Action ON UPDATE No Action
 GO
 
-ALTER TABLE [CT_NhapHang] ADD CONSTRAINT [FK_HoaDonNhapHang_DonNhapHang]
-	FOREIGN KEY ([MaHDN]) REFERENCES [HoaDonNhapHang] ([MaHDN]) ON DELETE No Action ON UPDATE No Action
+ALTER TABLE [CT_NhapHang] ADD CONSTRAINT [FK_CT_NhapHang_SanPham]
+	FOREIGN KEY ([MaSP]) REFERENCES [SanPham] ([MaSP]) ON DELETE No Action ON UPDATE No Action
 GO
 
 ALTER TABLE [HoaDonBanHang] ADD CONSTRAINT [FK_HoaDonBanHang_GiamGia]
@@ -582,29 +614,49 @@ GO
 ALTER TABLE [SanPham] ADD CONSTRAINT [FK_SanPham_NhaCungCap]
 	FOREIGN KEY ([NhaCungCap]) REFERENCES [NhaCungCap] ([MaNCC]) ON DELETE No Action ON UPDATE No Action
 GO
-/*
-INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'lqbinh', '123', N'Lâm Quốc Bình', N'Quản Trị Viên', 'Enabled')
-INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'tnmphuong', '123', N'Trần Ngọc Mỹ Phương', N'Quản Trị Viên', 'Enabled')
-INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'Kuro', '123', N'Trần Minh Sơn', N'Quản Trị Viên', 'Enabled')
-INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'MeanSun', '123', N'Phạm Tân Tị', N'Quản Trị Viên', 'Enabled')
-INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'LNTS', '123', N'Lê Nam Thái Sơn', N'Quản Trị Viên', 'Enabled')
-INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'ILN', '123', N'Michael Johnson', N'Khách Hàng', 'Disabled')
-INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'LPB', '123', N'Kina Abraham', N'Quản Lý', 'Disabled')
-INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'WBU', '123', N'Alexis Laflamme', N'Nhân Viên', 'Disabled')
-INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'IXW', '123', N'Julienne Baxley', N'Nhân Viên', 'Disabled')
-INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'GJD', '123', N'Adolfo Bergeron', N'Khách Hàng', 'Disabled')
-INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'OPR', '123', N'Garry Metzger', N'Quản Lý', 'Disabled')
-INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'LGB', '123', N'Cathrine Southerland', N'Khách Hàng', 'Disabled')
-INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'HFQ', '123', N'Emely Shull', N'Nhân Viên', 'Disabled')
-INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'CHI', '123', N'Charlsie Alston', N'Khách Hàng', 'Disabled')
-INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'YSI', '123', N'Yevette Vanwinkle', N'Quản Trị', 'Disabled')
-INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'COY', '123', N'Roxy Julian', N'Nhân Viên', 'Enabled')
-INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'SCZ', '123', N'Casey Pleasant', N'Nhân Viên', 'Enabled')
-INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'HAJ', '123', N'Jefferey Abrams', N'Khách Hàng', 'Enabled')
-INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'OPS', '123', N'Raymundo Bottoms', N'Khách Hàng', 'Enabled')
-INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'ETK', '123', N'Sophia Driscoll', N'Khách Hàng', 'Enabled')
-INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'TXJ', '123', N'Dave Browder', N'Khách Hàng', 'Enabled')
-INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'UAU', '123', N'Randee Quinonez', N'Quản Trị', 'Enabled')
-INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'NUP', '123', N'Terrell Fryer', N'Khách Hàng', 'Disabled')
-INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'NQP', '123', N'Nicola Neil', N'Khách Hàng', 'Enabled')
-INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'CME', '123', N'Earleen Sessions', N'Quản Lý', 'Disabled')*/
+
+--Quản trị viên - Enabled
+INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'LQB',  'a', N'Lâm Quốc Bình',   N'Quản Trị Viên', 'Enabled')
+INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'TMS',  'a', N'Trần Minh Sơn',   N'Quản Trị Viên', 'Enabled')
+INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'PTT',  'a', N'Phạm Tân Tị',     N'Quản Trị Viên', 'Enabled')
+INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'LNTS', 'a', N'Lê Nam Thái Sơn', N'Quản Trị Viên', 'Enabled')
+
+--Quản lý - Enabled
+INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'TNMP', 'a', N'Trần Ngọc Mỹ Phương', N'Quản lý', 'Enabled')
+
+--Nhân viên - Enabled
+INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'LT',  'a', N'Lâm Tỷ',           N'Nhân Viên', 'Enabled')
+INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'NMT', 'a', N'Nguyễn Minh Trí',  N'Nhân Viên', 'Enabled')
+INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'VHP', 'a', N'Vũ Hoàng Phát',    N'Nhân Viên', 'Enabled')
+INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'NVT', 'a', N'Ngô Văn Tiến',     N'Nhân Viên', 'Enabled')
+INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'TTT', 'a', N'Trần Trung Thắng', N'Nhân Viên', 'Enabled')
+INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'TMN', 'a', N'Trần Minh Nhật',   N'Nhân Viên', 'Enabled')
+INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'NTN', 'a', N'Nguyễn Thế Nhất',  N'Nhân Viên', 'Enabled')
+
+--Khách hàng - Enabled
+INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'LK',  'a', N'Lâm Khang',         N'Khách Hàng', 'Enabled')
+INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'NCB', 'a', N'Nguyễn Chiêu Bản',  N'Khách Hàng', 'Enabled')
+INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'NQB', 'a', N'Nguyễn Quốc Bảo',   N'Khách Hàng', 'Enabled')
+INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'HMC', 'a', N'Hà Minh Cường',     N'Khách Hàng', 'Enabled')
+INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'NDB', 'a', N'Nguyễn Dương Binl', N'Khách Hàng', 'Enabled')
+INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'PXB', 'a', N'Phan Xuân Bảo',     N'Khách Hàng', 'Enabled')
+
+INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'RJ', 'a', N'Roxy Julian',      N'Khách Hàng', 'Enabled')
+INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'CP', 'a', N'Casey Pleasant',   N'Khách Hàng', 'Enabled')
+INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'JA', 'a', N'Jefferey Abrams',  N'Khách Hàng', 'Enabled')
+INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'RB', 'a', N'Raymundo Bottoms', N'Khách Hàng', 'Enabled')
+INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'SD', 'a', N'Sophia Driscoll',  N'Khách Hàng', 'Enabled')
+INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'DB', 'a', N'Dave Browder',     N'Khách Hàng', 'Enabled')
+INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'RQ', 'a', N'Randee Quinonez',  N'Khách Hàng', 'Enabled')
+INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'TF', 'a', N'Terrell Fryer',    N'Khách Hàng', 'Enabled')
+INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'NN', 'a', N'Nicola Neil',      N'Khách Hàng', 'Enabled')
+INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'ES', 'a', N'Earleen Sessions', N'Khách Hàng', 'Enabled')
+
+--Disabled account
+INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'LPB', 'a', N'Kina Abraham', N'Quản Lý', 'Disabled')
+INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'GJD', 'a', N'Adolfo Bergeron', N'Khách Hàng', 'Disabled')
+INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'OPR', 'a', N'Garry Metzger', N'Quản Lý', 'Disabled')
+INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'LGB', 'a', N'Cathrine Southerland', N'Khách Hàng', 'Disabled')
+INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'HFQ', 'a', N'Emely Shull', N'Nhân Viên', 'Disabled')
+INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'CHI', 'a', N'Charlsie Alston', N'Khách Hàng', 'Disabled')
+INSERT dbo.TaiKhoan(TenTaiKhoan, MatKhau, NguoiDung, VaiTro, TrangThai) VALUES (N'YSI', 'a', N'Yevette Vanwinkle', N'Quản Trị', 'Disabled')
